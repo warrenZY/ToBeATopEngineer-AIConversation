@@ -14,7 +14,7 @@ public class JsonParserService : IJsonParserService
     public class ChatCompletionRequest
     {
         [JsonPropertyName("model")]
-        required public string Model { get; set; }
+        public string? Model { get; set; }
 
         [JsonPropertyName("messages")]
         required public List<ChatMessage> Messages { get; set; }
@@ -50,34 +50,34 @@ public class JsonParserService : IJsonParserService
 
 
     public static List<string> ParseMessages(string jsonString)
+    {
+        List<string> messages = new List<string>();
+
+        try
         {
-            List<string> messages = new List<string>();
+            JsonDocument document = JsonDocument.Parse(jsonString);
+            JsonElement root = document.RootElement;
 
-            try
+            if (root.TryGetProperty("choices", out JsonElement choicesArray) && choicesArray.ValueKind == JsonValueKind.Array)
             {
-                JsonDocument document = JsonDocument.Parse(jsonString);
-                JsonElement root = document.RootElement;
-
-                if (root.TryGetProperty("choices", out JsonElement choicesArray) && choicesArray.ValueKind == JsonValueKind.Array)
+                foreach (JsonElement choice in choicesArray.EnumerateArray())
                 {
-                    foreach (JsonElement choice in choicesArray.EnumerateArray())
+                    if (choice.TryGetProperty("message", out JsonElement messageObject) && messageObject.TryGetProperty("content", out JsonElement contentElement))
                     {
-                        if (choice.TryGetProperty("message", out JsonElement messageObject) && messageObject.TryGetProperty("content", out JsonElement contentElement))
-                        {
-                            messages.Add(contentElement.GetString());
-                        }
+                        messages.Add(contentElement.GetString());
                     }
                 }
             }
-            catch (JsonException ex)
-            {
-                Console.WriteLine($"JSON 解析错误: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"发生错误: {ex.Message}");
-            }
-
-            return messages;
         }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"JSON 解析错误: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"发生错误: {ex.Message}");
+        }
+
+        return messages;
+    }
 }

@@ -6,8 +6,13 @@
     <RootNamespace>ToBeATopEngineer_AIConversation</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
+    <PublishAot>false</PublishAot>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishTrimmed>True</PublishTrimmed>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Speech" Version="9.0.4" />
+  </ItemGroup>
 
 </Project>

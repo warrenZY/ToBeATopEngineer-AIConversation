@@ -3,12 +3,32 @@ using System.Text.Json;
 using System.Text;
 using ToBeATopEngineer_AIConversation.Services;
 using System.Text.Json.Serialization;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace ToBeATopEngineer_AIConversation;
 
 internal class Program
 {
     private static readonly HttpClient client = new HttpClient();
+    private static readonly ITtsService ttsService;
+
+    static Program()
+    {
+        // Initialize the appropriate TTS service based on the OS
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            ttsService = new WindowsTtsService();
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            ttsService = new LinuxTtsService();
+        }
+        else
+        {
+            ttsService = new NullTtsService(); // Fallback that does nothing
+        }
+    }
 
     public static async Task Main(string[] args)
     {
@@ -33,8 +53,7 @@ internal class Program
 
             var requestBody = new ChatCompletionRequest
             {
-                // Model = "deepseek-r1-distill-llama-8b",
-                Model = "qwq-32b",
+                Model = "ernie-speed-8k",
                 Messages = messages,
                 Temperature = 0.42,
                 WebSearch = new WebSearchOptions { Enable = true, EnableCitation = false, EnableTrace = false }
@@ -55,6 +74,9 @@ internal class Program
                     string aiResponse = extractedMessages[0];
                     Console.WriteLine($"AI：{aiResponse}");
                     messages.Add(new ChatMessage { Role = "assistant", Content = aiResponse });
+
+                    // Speak the AI response
+                    await ttsService.SpeakAsync(aiResponse);
                 }
                 else
                 {
@@ -68,9 +90,11 @@ internal class Program
                 Console.WriteLine($"返回内容: {responseContent}");
             }
         }
-
     }
 }
+
+
+
 
 [JsonSerializable(typeof(ChatCompletionRequest))]
 public partial class AppJsonSerializerContext : JsonSerializerContext
